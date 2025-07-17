@@ -147,7 +147,7 @@ def parseCommand():
     sim_parser.add_argument('--stop_threshold',
                         dest='stop_threshold',
                         default='20',
-                        help='Percentage threshold for the pruning process 0-100. Provides a stop to prevent us from going the given % below the expected count for any given bin during pruning. Default value of 20.')
+                        help='Percentage threshold for the pruning process 0-100. Provides a stop to prevent us from going the given %% below the expected count for any given bin during pruning. Default value of 20.')
 
     sim_parser.add_argument('--activation_threshold',
                         dest='activation_threshold',

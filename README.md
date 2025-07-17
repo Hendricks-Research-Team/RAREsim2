@@ -1,4 +1,10 @@
-# raresim
+# Raresim
+
+[![PyPI version](https://badge.fury.io/py/raresim.svg)](https://badge.fury.io/py/raresim)
+[![Python Version](https://img.shields.io/pypi/pyversions/raresim.svg)](https://pypi.org/project/raresim/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 Python Interface for Scalable rare-variant simulations.
 
 ## Table Of Contents
