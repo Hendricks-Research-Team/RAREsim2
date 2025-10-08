@@ -29,15 +29,19 @@ class DefaultRunner:
         # Start with loading all the necessary data
         matrix: SparseMatrix = self.matrix_reader.loadSparseMatrix(self.args.sparse_matrix)
         legend: Legend = LegendReaderWriter.load_legend(self.args.input_legend)
-        bins = self.get_bins()
+        
+        # Only load bins if not in probabilistic mode
+        bins = None
+        if self.runConfig.run_type != "probabilistic":
+            bins = self.get_bins()
 
         # Validate inputs
         if legend.row_count() != matrix.num_rows():
             print(f"Legend and Hap file lengths do not match. \n"
                                            f"Legend: {legend.row_count()}, Haps: {matrix.num_rows()}")
 
-        if self.args.input_legend is None or self.args.output_legend is None:
-            raise IllegalArgumentException("Legend files not provided")
+        if self.args.input_legend is None:
+            raise IllegalArgumentException("Input legend file not provided")
 
         transformer = self.get_transformer(bins, legend, matrix)
         transformer.transform()
@@ -45,6 +49,8 @@ class DefaultRunner:
         if self.runConfig.remove_zeroed_rows:
             print()
             print('Writing new variant legend')
+            if self.args.output_legend is None:
+                raise IllegalArgumentException("Output legend file not provided when remove_zeroed_rows is True")
             LegendReaderWriter.write_legend(legend, self.args.output_legend)
 
         print()

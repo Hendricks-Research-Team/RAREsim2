@@ -186,10 +186,17 @@ class FunctionalSplitPruner(Pruner):
         mode = self.__config.run_type
 
         print('Input allele frequency distribution:')
-        print('Functional')
-        print_bin(self.__bins['fun'], bin_assignments['fun'])
-        print('\nSynonymous')
-        print_bin(self.__bins['syn'], bin_assignments['syn'])
+        if mode == 'func_split':
+            print('Functional')
+            print_bin(self.__bins['fun'], bin_assignments['fun'])
+            print('\nSynonymous')
+            print_bin(self.__bins['syn'], bin_assignments['syn'])
+        elif mode == 'fun_only':
+            print('Functional')
+            print_bin(self.__bins, bin_assignments)
+        elif mode == 'syn_only':
+            print('Synonymous')
+            print_bin(self.__bins, bin_assignments)
 
         extra_rows = []
 

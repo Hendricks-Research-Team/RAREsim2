@@ -253,7 +253,7 @@ def calc(args):
             phi = float(args.phi)
             b = float(args.b)
 
-        weight = max(0.0, min(float(args.w), 2.0)) # clamp the weight to be in the range [0.2]
+        weight = max(0.0, float(args.w))
 
         num_variants = nvariants(n, omega, phi, reg_size, weight)
         rows = afs(alpha, beta, b, macs)

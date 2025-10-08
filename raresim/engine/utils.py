@@ -1,4 +1,5 @@
 import random
+from typing import Dict, List
 from raresim.common.sparse import SparseMatrix
 from raresim.common.legend import Legend
 
@@ -183,7 +184,7 @@ def z_flag(args, matrix: SparseMatrix, legend: Legend, rows_to_keep: list):
     trimmed_vars_file.close()
 
 
-def adjust_for_protected_variants(bins, bin_assignments, legend) -> dict[int, list]:
+def adjust_for_protected_variants(bins, bin_assignments, legend) -> Dict[int, List]:
     ret = {bin_id: [] for bin_id in range(len(bin_assignments))}
     for bin_id in range(len(bins)):
         rows_in_bin = bin_assignments[bin_id].copy()
