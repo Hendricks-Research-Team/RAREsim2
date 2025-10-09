@@ -61,22 +61,8 @@ class StandardPruner(Pruner):
         print_bin(self.__bins, bin_assignments)
 
         rows_to_keep = self.get_all_kept_rows(bin_assignments, extra_rows)
-        if not self.__config.remove_zeroed_rows:
-            trimmed_vars_file = open(
-                f'{self.__config.args.output_legend if self.__config.args.output_legend is not None else self.__config.args.input_legend}-pruned-variants', 'w')
-            trimmed_vars_file.write("\t".join(self.__legend.get_header()) + '\n')
-            for row in range(self.__matrix.num_rows()):
-                if row not in rows_to_keep:
-                    self.__matrix.prune_row(row, self.__matrix.row_num(row))
-                    trimmed_vars_file.write("\t".join([y for x, y in self.__legend[row].items()]) + '\n')
-                    if self.__matrix.row_num(row) != 0:
-                        raise Exception(
-                            "ERROR: Trimming pruned row to a row of zeros did not work. Failing so that we don't write a bad haps file.")
-                    rows_to_keep.append(row)
-            rows_to_keep.sort()
-            trimmed_vars_file.close()
 
-        if not self.__config.args.remove_zeroed_rows:
+        if self.__config.args.remove_zeroed_rows:
             z_flag(self.__config.args, self.__matrix, self.__legend, rows_to_keep)
 
         rows_to_remove = [x for x in range(self.__matrix.num_rows()) if x not in rows_to_keep]

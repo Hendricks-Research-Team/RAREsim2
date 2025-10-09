@@ -319,8 +319,6 @@ $ python3 -m raresim extract \
 
 ## Additional Resources
 
-- **Testing Documentation**: See [TESTING.md](TESTING.md) for information about running tests
 - **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing to the project
-- **Test Coverage Report**: See [TEST_COVERAGE_REPORT.md](TEST_COVERAGE_REPORT.md) for detailed coverage information
 - **GitHub Repository**: [https://github.com/RMBarnard/raresim](https://github.com/RMBarnard/raresim)
 - **Issues**: Report bugs or request features at [https://github.com/RMBarnard/raresim/issues](https://github.com/RMBarnard/raresim/issues)
