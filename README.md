@@ -43,7 +43,7 @@ options:
   -h, --help            show this help message and exit
   --mac MAC             MAC bin bounds (lower and upper allele counts) for the simulated sample size
   -o OUTPUT             Output file name
-  -N N                  Simulated sample size
+  -N N                  Number of individuals in the simulated sample
   --pop POP             Population (AFR, EAS, NFE, or SAS) to use default values for if not providing
                         alpha, beta, omega, phi, and b values or target data
   --alpha ALPHA         Shape parameter to estimate the expected AFS distribution (must be > 0)
@@ -68,37 +68,37 @@ options:
                         stratified simulations (default value of 1)
 ```
 
-* #### default population parameters
+#### *Default Population Parameters*
 The expected number of functional and synonymous variants can be estimated using default parameters for the following populations: African (AFR), East Asian (EAS), Non-Finnish European (NFE), and South Asian (SAS).
 ```bash
 $ python3 -m raresim calc \
-    --mac data/mac_bins.txt \
-    -o mac_bin_estimates.txt \
+    --mac example/mac_bins.txt \
+    -o example/mac_bin_estimates_default.txt \
     -N 10000 \
     --pop NFE \
     --reg_size 19.029
 ```
 
-* #### target data
+#### *Target Data*
 The user can also use their own target data - this is necessary to calculate the expected number of functional and/or synonymous variants for stratified simulations. Note, the simulation parameters are output if the user wants to use them instead of target data for future simulations.
 ```bash
 $ python3 -m raresim calc \
-    --mac data/mac_bins.txt \
-    -o mac_bin_estimates_10000_NFE.txt \
+    --mac example/mac_bins.txt \
+    -o example/mac_bin_estimates_target_120.txt \
     -N 10000 \
-    --nvar_target_data data/nvar_target.txt \
-    --afs_target_data data/afs_target.txt \
+    --nvar_target_data example/nvar_target.txt \
+    --afs_target_data example/afs_target.txt \
     --w_fun 1.2 \
     --w_syn 1.2 \
     --reg_size 19.029
 ```
 
-* #### user-provided parameters
+#### *User-Provided Parameters*
 If parameters are known from previous simulations, the user can provide those instead of having to provide and fit target data.
 ```bash
 $ python3 -m raresim calc \
-    --mac data/mac_bins.txt \
-    -o mac_bin_estimates.txt \
+    --mac example/mac_bins.txt \
+    -o example/mac_bin_estimates_params.txt \
     -N 10000 \
     --alpha 1.5 \
     --beta -.25 \
@@ -109,7 +109,7 @@ $ python3 -m raresim calc \
 ```
 
 ### SIM
-Simulate new allele frequencies given input haplotypes, a legend file, and the expected number of variants for the simulated sample size. A list of pruned variants (.legend-pruned-variants) is also output.
+Simulate new allele frequencies by pruning (i.e., removing) certain variants from an input haplotype file given the expected number of variants for the simulated sample size. A list of pruned variants (.legend-pruned-variants) is also output along with the new haplotype file.
 ```
 usage: __main__.py sim [-h] -m SPARSE_MATRIX [-b EXP_BINS]
                        [--functional_bins EXP_FUN_BINS]
@@ -160,13 +160,19 @@ options:
                         pulled out
 ```
 
+Note: An updated legend file is only output when using the z flag (when pruned variants are removed from the haplotype file). If not using the z flag,
+then the order and amount of rows (i.e., variants) in the haplotype file will remain unchanged and match the input legend file. Also, if the input
+haplotype file contains monomorphic variants (i.e., rows of zeros) when using the z flag, then the .legend-pruned-variants file will contain both
+monomorphic and actual pruned variants.
+
 ```bash
 $ python3 -m raresim sim \
-    -m data/haplotypes.haps.gz \
-    -b mac_bin_estimates.txt \
-    -l data/legend.legend \
-    -L output.legend \
-    -H output.haps.gz
+    -m example/example.haps.gz \
+    -b example/mac_bin_estimates_target.txt \
+    -l example/example.legend \
+    -L example/output.legend \
+    -H example/output.haps.gz \
+    -z
 
 Input allele frequency distribution:
 (1, 1, 20.0) 9
@@ -189,19 +195,19 @@ Writing new variant legend
 Writing new haplotype file............
 ```
 
-* #### stratified (functional/synonymous) pruning
+#### *Stratified (Functional/Synonymous) Pruning*
 To perform stratified simulations where functional and synonymous variants are pruned separately:
 1. add a column to the legend file (`-l`) named "fun", where functional variants have the value "fun" and synonymous variants have the value "syn"
 2. provide separate MAC bin files with the expected number of variants per bin for functional (`--functional_bins`) and synonymous (`--synonymous_bins`) variants
 ```bash
 $ python3 -m raresim sim \
-    -m data/haplotypes.haps.gz \
-    --functional_bins mac_bin_estimates_10000_NFE_120_fun.txt \
-    --synonymous_bins mac_bin_estimates_10000_NFE_100_syn.txt \
+    -m example/example.haps.gz \
+    --functional_bins example/mac_bin_estimates_target_120_fun.txt \
+    --synonymous_bins example/mac_bin_estimates_target_120_syn.txt \
     --stop_threshold 5 \
-    -l data/legend.legend \
-    -L output_stratified.legend \
-    -H output_stratified.haps.gz \
+    -l example/example.legend \
+    -L example/output_stratified.legend \
+    -H example/output_stratified.haps.gz \
     -z
 
 Input allele frequency distribution:
@@ -251,34 +257,45 @@ Writing new variant legend
 Writing new haplotype file...........
 ```
 
-* #### only functional/synonymous variants
+#### *Only Functional/Synonymous Variants*
 To prune only functional or only synonymous variants:
 1. add a column to the legend file (`-l`) named "fun", where functional variants have the value "fun" and synonymous variants have the value "syn"
 2. provide a MAC bin file with the expected number of variants per bin for only functional (`--f_only`) or only synonymous (`--s_only`) variants
 ```bash
 $ python3 -m raresim sim \
-    -m data/haplotypes.haps.gz \
-    --f_only mac_bin_estimates_10000_NFE_100_fun.txt \
+    -m example/example.haps.gz \
+    --f_only example/mac_bin_estimates_target_120_fun.txt \
     --stop_threshold 5 \
-    -l data/legend.legend \
-    -L output_fun_only.legend \
-    -H output_fun_only.haps.gz
+    -l example/example.legend \
+    -L example/output_fun_only.legend \
+    -H example/output_fun_only.haps.gz \
+    -z
 ```
 
-### CONVERT
-Convert haplotype files between different formats (.haps, .haps.gz, .sm).
+#### *Given Probabilities*
+To prune variants using known or given probabilities, add a column to the legend file (`-l`) named "prob". A random number between 0 and 1 is generated for each variant, and if the number is greater than the probability, the variant is removed from the data.
 ```
-options:
-  -h, --help            show this help message and exit
-  -i INPUT_FILE         Input haplotype file (can be .haps, .sm, or .gz file)
-  -o OUTPUT_FILE        Output haplotype file
+$ python3 -m raresim sim \
+    -m example/example.haps.gz \
+    -l example/example.legend \
+    -L example/output_probs.legend \
+    -H example/output_probs.haps.gz
+    -prob \
+    -z
 ```
 
-```bash
-$ python3 -m raresim convert \
-    -i data/haplotypes.haps.gz \
-    -o haplotypes.sm
+#### *Protected Status*
+To exclude protected variants from the pruning process, add a column to the legend file (`-l`) named "protected". Any row with a 0 in this column will be eligible for pruning while any row with a 1 will still be counted but will not be eligible for pruning.
 ```
+$ python3 -m raresim sim \
+    -m example/example.haps.gz \
+    -l example/example.legend \
+    -L example/output_protected.legend \
+    -H example/output_protected.haps.gz
+    --keep_protected \
+    -z
+```
+
 
 ### EXTRACT
 Randomly extract a subset of haplotypes (.haps-sample.gz) and output the remaining haplotypes separately (.haps-remainder.gz).
@@ -293,24 +310,22 @@ options:
 
 ```bash
 $ python3 -m raresim extract \
-    -i data/haplotypes.haps.gz \
-    -o haplotypes_subset.haps.gz \
+    -i example/example.haps.gz \
+    -o example/example_subset.haps.gz \
     -n 20000 \
     --seed 3
 ```
 
-## Complete Workflow Example
 
-For a complete end-to-end workflow example demonstrating how to use RAREsim2 for a full research pipeline, see the bash script in [`example/pruning_code.sh`](example/pruning_code.sh). This script demonstrates:
+## Complete Workflow Demonstration
 
-- Calculating MAC bin estimates using target data with stratification
-- Extracting sample subsets from large haplotype files
-- Performing stratified pruning (functional vs synonymous variants)
-- Using the `--keep_protected` flag to preserve specific variants
-- Creating multiple simulation scenarios for power analysis
-- Complete parameter settings used in published research
+For a complete end-to-end workflow demonstrating how to use RAREsim2, see the [RAREsim2_demo](https://github.com/JessMurphy/RAREsim2_demo) repository. This repository demonstrates how to:
 
-The example dataset files referenced in the script are available in the `data/` directory with shortened names for convenience.
+- Prepare the required input files
+- Perform initial simulations with an over-abundance of rare variants using Hapgen2
+- Create datasets for multiple case-control simulation scenarios using RAREsim2
+- Perform power analyses for rare variant association methods (Burden, SKAT, SKAT-O)
+
 
 ## Additional Resources
 
