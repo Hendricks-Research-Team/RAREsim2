@@ -29,7 +29,7 @@ def parseCommand():
     calc_parser.add_argument('-N',
                         dest='n',
                         required=True,
-                        help='Simulated sample size')
+                        help='Number of individuals in the simulated sample')
     calc_parser.add_argument('--pop',
                         dest='pop',
                         help='Population (AFR, EAS, NFE, or SAS) to use default values for if not providing alpha, beta, omega, phi, and b values or target data')
