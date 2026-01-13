@@ -73,7 +73,7 @@ def parseCommand():
     extract_parser.add_argument('-i',
                                 dest='input_file',
                                 required=True,
-                                help='Input haplotype file')
+                                help='Input haplotype file (gzipped)')
     extract_parser.add_argument('-o',
                                 dest='output_file',
                                 required=True,
