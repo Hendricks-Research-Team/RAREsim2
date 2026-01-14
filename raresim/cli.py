@@ -29,7 +29,7 @@ def parseCommand():
     calc_parser.add_argument('-N',
                         dest='n',
                         required=True,
-                        help='Simulated sample size')
+                        help='Number of individuals in the simulated sample')
     calc_parser.add_argument('--pop',
                         dest='pop',
                         help='Population (AFR, EAS, NFE, or SAS) to use default values for if not providing alpha, beta, omega, phi, and b values or target data')
@@ -73,7 +73,7 @@ def parseCommand():
     extract_parser.add_argument('-i',
                                 dest='input_file',
                                 required=True,
-                                help='Input haplotype file')
+                                help='Input haplotype file (gzipped)')
     extract_parser.add_argument('-o',
                                 dest='output_file',
                                 required=True,
