@@ -357,6 +357,8 @@ class ProbabilisticPruner(Pruner):
 
         :return: None
         """
+        rows_to_keep = []
+        
         for row_index in range(self.__matrix.num_rows()):
             row = self.__matrix.get_row_raw(row_index)
             for col_index in row:
@@ -366,3 +368,21 @@ class ProbabilisticPruner(Pruner):
                     continue
                 elif flip > float(legend_val):
                     self.__matrix.remove(row_index, col_index)
+            
+            if self.__matrix.row_num(row_index) > 0:
+                rows_to_keep.append(row_index)
+        
+        trimmed_vars_file = open(
+            f'{self.__config.args.output_legend if self.__config.args.output_legend is not None else self.__config.args.input_legend}-pruned-variants', 'w')
+        trimmed_vars_file.write("\t".join(self.__legend.get_header()) + '\n')
+        for row in range(self.__matrix.num_rows()):
+            if row not in rows_to_keep:
+                trimmed_vars_file.write("\t".join([y for x, y in self.__legend[row].items()]) + '\n')
+        
+        trimmed_vars_file.close()
+        
+        if self.__config.remove_zeroed_rows:
+            rows_to_remove = [x for x in range(self.__matrix.num_rows()) if x not in rows_to_keep]
+            for rowId in rows_to_remove[::-1]:
+                self.__legend.remove_row(rowId)
+                self.__matrix.remove_row(rowId)

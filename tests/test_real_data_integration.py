@@ -187,6 +187,80 @@ class TestRealDataWorkflows(unittest.TestCase):
         self.assertEqual(output_matrix.num_rows(), 31, "Should maintain all 31 rows")
         self.assertEqual(output_matrix.num_cols(), 20, "Should maintain all 20 columns")
     
+    def test_probabilistic_pruning_with_z_flag(self):
+        """Test probabilistic pruning with -z flag creates pruned-variants file and removes zeroed rows"""
+        random.seed(42)
+        
+        haps_file = os.path.join(self.data_dir, 'ProbExample.haps')
+        legend_file = os.path.join(self.data_dir, 'ProbExample.probs.legend')
+        output_hap = os.path.join(self.temp_dir, 'prob_z_output.haps.gz')
+        output_legend = os.path.join(self.temp_dir, 'prob_z_output.legend')
+        
+        reader = SparseMatrixReader()
+        original_matrix = reader.loadSparseMatrix(haps_file)
+        original_legend = LegendReaderWriter.load_legend(legend_file)
+        
+        self.assertEqual(original_matrix.num_rows(), 31)
+        
+        args = Namespace(
+            sparse_matrix=haps_file,
+            input_legend=legend_file,
+            output_legend=output_legend,
+            output_hap=output_hap,
+            exp_bins=None,
+            exp_fun_bins=None,
+            exp_syn_bins=None,
+            fun_bins_only=None,
+            syn_bins_only=None,
+            prob=True,
+            z=True,
+            remove_zeroed_rows=True,
+            small_sample=True,
+            keep_protected=False,
+            activation_threshold=10,
+            stop_threshold=20,
+            verbose=False
+        )
+        
+        config = RunConfig(args)
+        self.assertEqual(config.run_type, 'probabilistic')
+        self.assertTrue(config.remove_zeroed_rows)
+        
+        runner = DefaultRunner(config)
+        runner.run()
+        
+        # Verify output files were created
+        self.assertTrue(os.path.exists(output_hap), "Output haps file must be created")
+        self.assertTrue(os.path.exists(output_legend), "Output legend file must be created")
+        
+        # Verify pruned-variants file was created
+        pruned_variants_file = f'{output_legend}-pruned-variants'
+        self.assertTrue(os.path.exists(pruned_variants_file), 
+                       "Pruned-variants file must be created with -prob and -z flags")
+        
+        # Load output and verify
+        output_matrix = reader.loadSparseMatrix(output_hap)
+        output_legend = LegendReaderWriter.load_legend(output_legend)
+        
+        # With -z flag, zeroed rows should be removed
+        self.assertLess(output_matrix.num_rows(), original_matrix.num_rows(),
+                       "With -z flag, some rows should be removed")
+        
+        # Verify no zeroed rows remain
+        for i in range(output_matrix.num_rows()):
+            self.assertGreater(output_matrix.row_num(i), 0,
+                             f"Row {i} should not be zero after -z flag")
+        
+        # Verify legend and matrix match
+        self.assertEqual(output_legend.row_count(), output_matrix.num_rows(),
+                        "Legend and matrix row counts must match")
+        
+        # Verify pruned-variants file has header and content
+        with open(pruned_variants_file, 'r') as f:
+            lines = f.readlines()
+            self.assertGreater(len(lines), 1, "Pruned-variants file should have header and data")
+            self.assertIn('id', lines[0], "First line should be header")
+    
     def test_standard_pruning_complete_workflow(self):
         """Test complete standard pruning workflow - NO exception catching"""
         # Set random seed for deterministic results
