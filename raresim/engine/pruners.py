@@ -53,17 +53,28 @@ class StandardPruner(Pruner):
         input_bin_assignments = copy_bin_assignments(bin_assignments)
 
         protected_vars_per_bin = {}
+        unprotected_bins = None
+        unprotected_input_bin_assignments = None
+        unprotected_output_bin_assignments = None
         if self.__config.args.keep_protected:
             protected_vars_per_bin = adjust_for_protected_variants(self.__bins, bin_assignments, self.__legend)
+            if self.__config.args.verbose:
+                unprotected_bins = copy.deepcopy(self.__bins)
+                unprotected_input_bin_assignments = copy_bin_assignments(bin_assignments)
 
         extra_rows = []
         prune_bins(extra_rows, bin_assignments, self.__legend, self.__matrix, self.__bins, self.__config.activation_threshold, self.__config.stop_threshold)
 
         if self.__config.args.keep_protected:
+            if self.__config.args.verbose:
+                unprotected_output_bin_assignments = copy_bin_assignments(bin_assignments)
             add_protected_rows_back(self.__bins, bin_assignments, protected_vars_per_bin)
 
         print('Allele frequency distribution:')
         print_bin_comparison(self.__bins, input_bin_assignments, bin_assignments)
+        if self.__config.args.keep_protected and self.__config.args.verbose:
+            print('\nAllele frequency distribution excluding protected variants:')
+            print_bin_comparison(unprotected_bins, unprotected_input_bin_assignments, unprotected_output_bin_assignments)
 
         rows_to_keep = self.get_all_kept_rows(bin_assignments)
         _write_pruned_variants_file(self.__config, self.__legend, rows_to_keep)
@@ -198,9 +209,15 @@ class FunctionalSplitPruner(Pruner):
         input_bin_assignments = copy_bin_assignments(bin_assignments)
 
         protected_vars_per_bin = {}
+        unprotected_bins = None
+        unprotected_input_bin_assignments = None
+        unprotected_output_bin_assignments = None
         if self.__config.args.keep_protected:
             protected_vars_per_bin['fun'] = adjust_for_protected_variants(self.__bins['fun'], bin_assignments['fun'], self.__legend)
             protected_vars_per_bin['syn'] = adjust_for_protected_variants(self.__bins['syn'], bin_assignments['syn'], self.__legend)
+            if self.__config.args.verbose:
+                unprotected_bins = copy.deepcopy(self.__bins)
+                unprotected_input_bin_assignments = copy_bin_assignments(bin_assignments)
         extra_rows = []
 
         extra_rows = {'fun': [], 'syn': []}
@@ -208,6 +225,8 @@ class FunctionalSplitPruner(Pruner):
         prune_bins(extra_rows['syn'], bin_assignments['syn'], self.__legend, self.__matrix, self.__bins['syn'], self.__config.activation_threshold, self.__config.stop_threshold)
 
         if self.__config.args.keep_protected:
+            if self.__config.args.verbose:
+                unprotected_output_bin_assignments = copy_bin_assignments(bin_assignments)
             add_protected_rows_back(self.__bins['fun'], bin_assignments['fun'], protected_vars_per_bin['fun'])
             add_protected_rows_back(self.__bins['syn'], bin_assignments['syn'], protected_vars_per_bin['syn'])
 
@@ -216,6 +235,12 @@ class FunctionalSplitPruner(Pruner):
         print_bin_comparison(self.__bins['fun'], input_bin_assignments['fun'], bin_assignments['fun'])
         print('\nSynonymous')
         print_bin_comparison(self.__bins['syn'], input_bin_assignments['syn'], bin_assignments['syn'])
+        if self.__config.args.keep_protected and self.__config.args.verbose:
+            print('\nAllele frequency distribution excluding protected variants:')
+            print('Functional')
+            print_bin_comparison(unprotected_bins['fun'], unprotected_input_bin_assignments['fun'], unprotected_output_bin_assignments['fun'])
+            print('\nSynonymous')
+            print_bin_comparison(unprotected_bins['syn'], unprotected_input_bin_assignments['syn'], unprotected_output_bin_assignments['syn'])
 
         rows_to_keep = self.get_all_kept_rows(bin_assignments)
         _write_pruned_variants_file(self.__config, self.__legend, rows_to_keep)

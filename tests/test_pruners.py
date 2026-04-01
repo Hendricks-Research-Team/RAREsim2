@@ -163,7 +163,9 @@ class TestStandardPruner(unittest.TestCase):
         assert(runConfig.run_type == "standard")
         
         pruner = StandardPruner(runConfig, self.bins, self.legend, self.matrix)
-        pruner.transform()
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            pruner.transform()
         
         after_assigned_bins = pruner.assign_bins()
         
@@ -187,6 +189,12 @@ class TestStandardPruner(unittest.TestCase):
                 # Extract index from variant_id (e.g., "allele10" -> 10)
                 idx = int(variant_id.replace('allele', ''))
                 assert(idx not in self.protected_indices), f"Protected variant {idx} was written to pruned file!"
+
+        output = stdout.getvalue()
+        assert("Allele frequency distribution excluding protected variants:" in output)
+        assert("Expected" in output)
+        assert("Input" in output)
+        assert("Output" in output)
     
     def test_borrowing_from_extra_rows(self):
         """Test that smaller bins can borrow from extra_rows (variants pruned from larger bins)"""
