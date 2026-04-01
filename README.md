@@ -79,7 +79,7 @@ $ python3 -m raresim calc \
     --pop NFE \
     --reg_size 19.029
 
-Calculated 842.5888117489534 total variants (accounting for region size)
+Calculated 842.5888 total variants (accounting for region size)
 ```
 
 #### Target Data
@@ -95,14 +95,14 @@ $ python3 -m raresim calc \
     --reg_size 19.029
 
 Calculating synonymous values
-Calculated the following params from AFS target data. alpha: 1.9397807693228122, beta: 0.34101610369526514, b: 0.8464846288340953
-Calculated the following params from nvar target data. omega: 0.6295595643083463, phi: 0.04392478579419536
-Calculated 275.6537313477067 total variants (accounting for region size)
+Calculated the following params from AFS target data. alpha: 1.9398, beta: 0.3410, b: 0.8465
+Calculated the following params from nvar target data. omega: 0.6296, phi: 0.0439
+Calculated 275.6537 total variants (accounting for region size)
 
 Calculating functional values
-Calculated the following params from AFS target data. alpha: 2.1388159441481442, beta: 0.4285647164342115, b: 1.134635990601139
-Calculated the following params from nvar target data. omega: 0.6413547202832528, phi: 0.08338724275310817
-Calculated 583.3570639000195 total variants (accounting for region size)
+Calculated the following params from AFS target data. alpha: 2.1388, beta: 0.4286, b: 1.1346
+Calculated the following params from nvar target data. omega: 0.6414, phi: 0.0834
+Calculated 583.3571 total variants (accounting for region size)
 ```
 
 Note: Two MAC bin estimate files will be output (one for functional variants and another for synonymous variants) if the 
@@ -123,7 +123,7 @@ $ python3 -m raresim calc \
     --phi 0.1073 \
     --reg_size 19.029
 
-Calculated 842.5888117489534 total variants (accounting for region size)
+Calculated 842.5888 total variants (accounting for region size)
 ```
 
 ### SIM
@@ -188,27 +188,16 @@ $ python3 -m raresim sim \
     -z
 
 Running with run mode: standard
-Input allele frequency distribution:
-Bin         Expected          Actual
-[1,1]       452.7055560068    1002
-[2,2]       130.4830742030    484
-[3,5]       120.6258509819    768
-[6,10]      52.2181585555     663
-[11,20]     29.5461366439     681
-[21,100]    26.2774091990     856
-[101,200]   3.6164427260      79
-[201,∞]     N/A               65
-
-New allele frequency distribution:
-Bin         Expected          Actual
-[1,1]       452.7055560068    472
-[2,2]       130.4830742030    119
-[3,5]       120.6258509819    110
-[6,10]      52.2181585555     48
-[11,20]     29.5461366439     28
-[21,100]    26.2774091990     47
-[101,200]   3.6164427260      3
-[201,∞]     N/A               65
+Allele frequency distribution:
+Bin         Expected    Input     Output
+[1,1]       452.706     980       451
+[2,2]       130.483     480       126
+[3,5]       120.626     757       101
+[6,10]      52.218      648       52
+[11,20]     29.546      669       41
+[21,100]    26.277      841       30
+[101,200]   3.616       79        5
+[201,∞]     N/A         64        64
 
 Writing new variant legend
 
@@ -236,51 +225,28 @@ $ python3 -m raresim sim \
     -z
 
 Running with run mode: func_split
-Input allele frequency distribution:
+Allele frequency distribution:
 Functional
-Bin         Expected          Actual
-[1,1]       308.6658613719    706
-[2,2]       99.2199432898     332
-[3,5]       92.6656147375     541
-[6,10]      38.2293812491     463
-[11,20]     19.9237792915     489
-[21,100]    15.1688219483     607
-[101,200]   1.6493333218      52
-[201,∞]     N/A               46
+Bin         Expected    Input     Output
+[1,1]       308.666     684       319
+[2,2]       99.220      328       86
+[3,5]       92.666      530       82
+[6,10]      38.229      448       38
+[11,20]     19.924      477       20
+[21,100]    15.169      592       18
+[101,200]   1.649       52        1
+[201,∞]     N/A         45        45
 
 Synonymous
-Bin         Expected          Actual
-[1,1]       132.0653670095    296
-[2,2]       44.8145869897     152
-[3,5]       45.0536145138     227
-[6,10]      20.7498071235     200
-[11,20]     12.1186468959     192
-[21,100]    11.0509676181     249
-[101,200]   1.5493808935      27
-[201,∞]     N/A               19
-
-New allele frequency distribution:
-Functional
-Bin         Expected          Actual
-[1,1]       308.6658613719    290
-[2,2]       99.2199432898     99
-[3,5]       92.6656147375     88
-[6,10]      38.2293812491     47
-[11,20]     19.9237792915     18
-[21,100]    15.1688219483     22
-[101,200]   1.6493333218      1
-[201,∞]     N/A               46
-
-Synonymous
-Bin         Expected          Actual
-[1,1]       132.0653670095    134
-[2,2]       44.8145869897     42
-[3,5]       45.0536145138     51
-[6,10]      20.7498071235     22
-[11,20]     12.1186468959     11
-[21,100]    11.0509676181     11
-[101,200]   1.5493808935      2
-[201,∞]     N/A               19
+Bin         Expected    Input     Output
+[1,1]       132.065     296       141
+[2,2]       44.815      152       43
+[3,5]       45.054      227       56
+[6,10]      20.750      200       29
+[11,20]     12.119      192       13
+[21,100]    11.051      249       13
+[101,200]   1.549       27        1
+[201,∞]     N/A         19        19
 
 Writing new variant legend
 
@@ -303,27 +269,16 @@ $ python3 -m raresim sim \
     -z
 
 Running with run mode: fun_only
-Input allele frequency distribution:
-Bin         Expected          Actual
-[1,1]       308.6658613719    706
-[2,2]       99.2199432898     332
-[3,5]       92.6656147375     541
-[6,10]      38.2293812491     463
-[11,20]     19.9237792915     489
-[21,100]    15.1688219483     607
-[101,200]   1.6493333218      52
-[201,∞]     N/A               46
-
-New allele frequency distribution:
-Bin         Expected          Actual
-[1,1]       308.6658613719    312
-[2,2]       99.2199432898     92
-[3,5]       92.6656147375     102
-[6,10]      38.2293812491     38
-[11,20]     19.9237792915     17
-[21,100]    15.1688219483     15
-[101,200]   1.6493333218      2
-[201,∞]     N/A               46
+Allele frequency distribution:
+Bin         Expected    Input     Output
+[1,1]       308.666     684       283
+[2,2]       99.220      328       102
+[3,5]       92.666      530       96
+[6,10]      38.229      448       33
+[11,20]     19.924      477       15
+[21,100]    15.169      592       14
+[101,200]   1.649       52        3
+[201,∞]     N/A         45        45
 
 Writing new variant legend
 
@@ -332,7 +287,7 @@ Writing new haplotype file
 ```
 
 #### Given Probabilities
-To prune variants using known or given probabilities, add a column to the legend file (`-l`) named `prob`. A single random draw is generated for each variant row, and the row is kept with the probability given in the legend. When using the `-z` flag, fully pruned and monomorphic variants are removed from the output haplotype file, and a pruned-variants file is created.
+To prune variants using known or given probabilities of inclusion, add a column to the legend file (`-l`) named `prob`. A single random draw is generated for each variant row, and the row is kept with the probability given in the legend. When using the `-z` flag, fully pruned and monomorphic variants are removed from the output haplotype file, and a pruned-variants file is created.
 
 ```text
 $ python3 -m raresim sim \
@@ -344,6 +299,16 @@ $ python3 -m raresim sim \
     -z
 
 Running with run mode: probabilistic
+Allele frequency distribution:
+Prob      Bin         Expected    Input     Output
+0.46      [1,1]       450.800     980       432
+0.27      [2,2]       129.600     480       132
+0.16      [3,5]       121.120     757       114
+0.081     [6,10]      52.488      648       56
+0.044     [11,20]     29.436      669       26
+0.031     [21,100]    26.071      841       24
+0.046     [101,199]   3.634       79        4
+1         [202,33728] 64.000      64        64
 
 Writing new variant legend
 
@@ -366,27 +331,16 @@ $ python3 -m raresim sim \
     -z
 
 Running with run mode: standard
-Input allele frequency distribution:
-Bin         Expected          Actual
-[1,1]       452.7055560068    1002
-[2,2]       130.4830742030    484
-[3,5]       120.6258509819    768
-[6,10]      52.2181585555     663
-[11,20]     29.5461366439     681
-[21,100]    26.2774091990     856
-[101,200]   3.6164427260      79
-[201,∞]     N/A               65
-
-New allele frequency distribution:
-Bin         Expected          Actual
-[1,1]       452.7055560068    462
-[2,2]       130.4830742030    131
-[3,5]       120.6258509819    123
-[6,10]      52.2181585555     52
-[11,20]     29.5461366439     32
-[21,100]    26.2774091990     25
-[101,200]   3.6164427260      3
-[201,∞]     N/A               65
+Allele frequency distribution:
+Bin         Expected    Input     Output
+[1,1]       452.706     980       455
+[2,2]       130.483     480       133
+[3,5]       120.626     757       124
+[6,10]      52.218      648       51
+[11,20]     29.546      669       30
+[21,100]    26.277      841       25
+[101,200]   3.616       79        3
+[201,∞]     N/A         64        64
 
 Writing new variant legend
 
