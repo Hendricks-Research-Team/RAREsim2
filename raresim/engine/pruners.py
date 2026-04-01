@@ -38,28 +38,20 @@ class StandardPruner(Pruner):
         :return: A TransformerResult object
         """
         bin_assignments = self.assign_bins()
-
-        print('Input allele frequency distribution:')
-        print_bin(self.__bins, bin_assignments)
+        input_bin_assignments = copy_bin_assignments(bin_assignments)
 
         protected_vars_per_bin = {}
         if self.__config.args.keep_protected:
             protected_vars_per_bin = adjust_for_protected_variants(self.__bins, bin_assignments, self.__legend)
-            if self.__config.args.verbose:
-                print("Input allele frequency distribution (with protected variants pulled out):")
-                print_bin(self.__bins, bin_assignments)
 
         extra_rows = []
         prune_bins(extra_rows, bin_assignments, self.__legend, self.__matrix, self.__bins, self.__config.activation_threshold, self.__config.stop_threshold)
 
         if self.__config.args.keep_protected:
-            if self.__config.args.verbose:
-                print("Output allele frequency distribution (without protected variants added back):")
-                print_bin(self.__bins, bin_assignments)
             add_protected_rows_back(self.__bins, bin_assignments, protected_vars_per_bin)
 
-        print('\nNew allele frequency distribution:')
-        print_bin(self.__bins, bin_assignments)
+        print('Allele frequency distribution:')
+        print_bin_comparison(self.__bins, input_bin_assignments, bin_assignments)
 
         rows_to_keep = self.get_all_kept_rows(bin_assignments)
 
@@ -196,23 +188,12 @@ class FunctionalSplitPruner(Pruner):
         :rtype: list
         """
         bin_assignments = self.assign_bins()
-
-        print('Input allele frequency distribution:')
-        print('Functional')
-        print_bin(self.__bins['fun'], bin_assignments['fun'])
-        print('\nSynonymous')
-        print_bin(self.__bins['syn'], bin_assignments['syn'])
+        input_bin_assignments = copy_bin_assignments(bin_assignments)
 
         protected_vars_per_bin = {}
         if self.__config.args.keep_protected:
             protected_vars_per_bin['fun'] = adjust_for_protected_variants(self.__bins['fun'], bin_assignments['fun'], self.__legend)
             protected_vars_per_bin['syn'] = adjust_for_protected_variants(self.__bins['syn'], bin_assignments['syn'], self.__legend)
-            if self.__config.args.verbose:
-                print("Input allele frequency distribution (with protected variants pulled out):")
-                print('Functional')
-                print_bin(self.__bins['fun'], bin_assignments['fun'])
-                print('\nSynonymous')
-                print_bin(self.__bins['syn'], bin_assignments['syn'])
         extra_rows = []
 
         extra_rows = {'fun': [], 'syn': []}
@@ -220,20 +201,14 @@ class FunctionalSplitPruner(Pruner):
         prune_bins(extra_rows['syn'], bin_assignments['syn'], self.__legend, self.__matrix, self.__bins['syn'], self.__config.activation_threshold, self.__config.stop_threshold)
 
         if self.__config.args.keep_protected:
-            if self.__config.args.verbose:
-                print("Output allele frequency distribution (without protected variants added back):")
-                print('Functional')
-                print_bin(self.__bins['fun'], bin_assignments['fun'])
-                print('\nSynonymous')
-                print_bin(self.__bins['syn'], bin_assignments['syn'])
             add_protected_rows_back(self.__bins['fun'], bin_assignments['fun'], protected_vars_per_bin['fun'])
             add_protected_rows_back(self.__bins['syn'], bin_assignments['syn'], protected_vars_per_bin['syn'])
-            
-        print('\nNew allele frequency distribution:')
+
+        print('Allele frequency distribution:')
         print('Functional')
-        print_bin(self.__bins['fun'], bin_assignments['fun'])
+        print_bin_comparison(self.__bins['fun'], input_bin_assignments['fun'], bin_assignments['fun'])
         print('\nSynonymous')
-        print_bin(self.__bins['syn'], bin_assignments['syn'])
+        print_bin_comparison(self.__bins['syn'], input_bin_assignments['syn'], bin_assignments['syn'])
 
         rows_to_keep = self.get_all_kept_rows(bin_assignments)
         
@@ -354,8 +329,8 @@ class ProbabilisticPruner(Pruner):
         A single random draw is made per row. If the draw is greater than the
         legend's `prob` value, the whole variant is removed.
         """
-        print('Input allele frequency distribution:')
-        print_observed_afd(self.__matrix)
+        probability_bins = build_probabilistic_bins(self.__matrix, self.__legend)
+        input_observed_afd = summarize_observed_afd(self.__matrix)
 
         rows_to_keep = []
 
@@ -372,8 +347,11 @@ class ProbabilisticPruner(Pruner):
 
             self.__matrix.prune_row(row_index, self.__matrix.row_num(row_index))
 
-        print('\nNew allele frequency distribution:')
-        print_observed_afd(self.__matrix)
+        print('Allele frequency distribution:')
+        if len(probability_bins) <= 10:
+            print_probabilistic_bin_summary(probability_bins, self.__matrix)
+        else:
+            print_observed_afd_comparison(input_observed_afd, summarize_observed_afd(self.__matrix))
 
         trimmed_vars_file = open(
             f'{self.__config.args.output_legend if self.__config.args.output_legend is not None else self.__config.args.input_legend}-pruned-variants', 'w')

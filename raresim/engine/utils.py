@@ -1,47 +1,43 @@
 import random
+import copy
 from typing import Dict, List
 from raresim.common.sparse import SparseMatrix
 from raresim.common.legend import Legend
 
 
-def print_bin(bins: list, bin_assignments: dict):
-    """
-    Print bin assignments to the console.
-
-    Parameters
-    ----------
-    bins : list of lists
-        List of bins, where each bin is a list of two elements: the lower
-        bound of the bin (inclusive) and the upper bound of the bin
-        (exclusive), and the expected number of variants in the bin.
-    bin_assignments : dict of lists
-        List of lists, where each inner list contains the row numbers of
-        variants assigned to the corresponding bin.
-
-    Returns
-    -------
-    None
-    """
-    print(f"{'Bin':<12}{'Expected':<18}{'Actual':<10}")
-    for bin_id in range(len(bin_assignments)):
-        if bin_id < len(bins):
-            col1 = f"[{str(bins[bin_id][0])},{str(bins[bin_id][1])}]"
-            col2 = f"{bins[bin_id][2]:.10f}"
-            col3 = f"{str(len(bin_assignments[bin_id]))}"
-        else:
-            col1 = f"[{str(bins[bin_id - 1][1] + 1)},\u221E]"
-            col2 = "N/A"
-            col3 = f"{str(len(bin_assignments[bin_id]))}"
-        print(f"{col1:<12}{col2:<18}{col3:<10}")
+def copy_bin_assignments(bin_assignments):
+    return copy.deepcopy(bin_assignments)
 
 
-def print_observed_afd(matrix: SparseMatrix) -> None:
-    """
-    Print the observed allele frequency distribution for the current matrix.
+def _format_expected(expected) -> str:
+    if expected == "N/A":
+        return expected
+    return f"{float(expected):.3f}"
 
-    This mirrors the standard pruning table shape, but uses exact observed
-    allele counts and reports `N/A` for the expected column.
-    """
+
+def _bin_label_from_ranges(lower, upper) -> str:
+    return f"[{lower},{upper}]"
+
+
+def _bin_label_from_standard_bins(bins: list, bin_id: int, total_bins: int) -> str:
+    if bin_id < len(bins):
+        return _bin_label_from_ranges(bins[bin_id][0], bins[bin_id][1])
+    return f"[{str(bins[bin_id - 1][1] + 1)},\u221E]"
+
+
+def print_bin_comparison(bins: list, input_assignments: dict, output_assignments: dict):
+    print(f"{'Bin':<12}{'Expected':<12}{'Input':<10}{'Output':<10}")
+    for bin_id in range(len(input_assignments)):
+        expected = bins[bin_id][2] if bin_id < len(bins) else "N/A"
+        print(
+            f"{_bin_label_from_standard_bins(bins, bin_id, len(input_assignments)):<12}"
+            f"{_format_expected(expected):<12}"
+            f"{len(input_assignments[bin_id]):<10}"
+            f"{len(output_assignments[bin_id]):<10}"
+        )
+
+
+def summarize_observed_afd(matrix: SparseMatrix) -> dict:
     allele_count_bins = {}
     for row_id in range(matrix.num_rows()):
         allele_count = matrix.row_num(row_id)
@@ -49,10 +45,81 @@ def print_observed_afd(matrix: SparseMatrix) -> None:
             continue
         allele_count_bins.setdefault(allele_count, 0)
         allele_count_bins[allele_count] += 1
+    return allele_count_bins
 
-    print(f"{'Bin':<12}{'Expected':<18}{'Actual':<10}")
-    for allele_count in sorted(allele_count_bins):
-        print(f"[{allele_count},{allele_count}]".ljust(12) + f"{'N/A':<18}{allele_count_bins[allele_count]:<10}")
+
+def print_observed_afd_comparison(input_summary: dict, output_summary: dict) -> None:
+    """
+    Print observed allele frequency distributions as a single comparison table.
+    """
+    print(f"{'Bin':<12}{'Expected':<12}{'Input':<10}{'Output':<10}")
+    for allele_count in sorted(set(input_summary) | set(output_summary)):
+        print(
+            f"[{allele_count},{allele_count}]".ljust(12)
+            + f"{'N/A':<12}"
+            + f"{input_summary.get(allele_count, 0):<10}"
+            + f"{output_summary.get(allele_count, 0):<10}"
+        )
+
+
+def build_probabilistic_bins(matrix: SparseMatrix, legend: Legend) -> list:
+    """
+    Infer MAC bins from the input matrix by grouping rows with the same keep
+    probability.
+
+    Each unique probability is assigned a single inferred MAC range based on
+    the non-monomorphic rows carrying that probability.
+    """
+    grouped = {}
+    for row_id in range(matrix.num_rows()):
+        row_mac = matrix.row_num(row_id)
+        if row_mac <= 0:
+            continue
+
+        probability = legend[row_id].get('prob', '.')
+        if probability == '.':
+            continue
+
+        if probability not in grouped:
+            grouped[probability] = {
+                'probability': probability,
+                'rows': [],
+                'lower': row_mac,
+                'upper': row_mac,
+                'expected': 0.0,
+            }
+
+        grouped[probability]['rows'].append(row_id)
+        grouped[probability]['lower'] = min(grouped[probability]['lower'], row_mac)
+        grouped[probability]['upper'] = max(grouped[probability]['upper'], row_mac)
+
+    inferred_bins = []
+    for probability, values in grouped.items():
+        values['expected'] = float(probability) * len(values['rows'])
+        inferred_bins.append(values)
+
+    return sorted(inferred_bins, key=lambda item: (item['lower'], item['upper'], float(item['probability'])))
+
+
+def print_probabilistic_bin_summary(probability_bins: list, matrix: SparseMatrix) -> None:
+    """
+    Print probabilistic pruning bins inferred from the input legend.
+    """
+    print(f"{'Prob':<10}{'Bin':<12}{'Expected':<12}{'Input':<10}{'Output':<10}")
+    for probability_bin in probability_bins:
+        output = 0
+        for row_id in probability_bin['rows']:
+            if matrix.row_num(row_id) > 0:
+                output += 1
+
+        bin_label = f"[{probability_bin['lower']},{probability_bin['upper']}]"
+        print(
+            f"{probability_bin['probability']:<10}"
+            f"{bin_label:<12}"
+            f"{_format_expected(probability_bin['expected']):<12}"
+            f"{len(probability_bin['rows']):<10}"
+            f"{output:<10}"
+        )
 
 
 def prune_bins(extra_rows: list, bin_assignments: dict, legend: Legend, matrix: SparseMatrix, bins: list,
