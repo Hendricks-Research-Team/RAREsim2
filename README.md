@@ -21,7 +21,7 @@ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://
 
 ### From Source
 ```bash
-git clone https://github.com/RMBarnard/raresim.git
+git clone https://github.com/Hendricks-Research-Team/RAREsim2.git
 cd raresim
 pip install -e .  # Install in development mode
 ```
@@ -382,5 +382,5 @@ For a complete end-to-end workflow demonstrating how to use RAREsim2, see the [R
 ## Additional Resources
 
 - **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing to the project
-- **GitHub Repository**: [https://github.com/RMBarnard/raresim](https://github.com/RMBarnard/raresim)
-- **Issues**: Report bugs or request features at [https://github.com/RMBarnard/raresim/issues](https://github.com/RMBarnard/raresim/issues)
+- **GitHub Repository**: [https://github.com/Hendricks-Research-Team/RAREsim2](https://github.com/Hendricks-Research-Team/RAREsim2)
+- **Issues**: Report bugs or request features at [https://github.com/Hendricks-Research-Team/RAREsim2/issues](https://github.com/Hendricks-Research-Team/RAREsim2/issues)
