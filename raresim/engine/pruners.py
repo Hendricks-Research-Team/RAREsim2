@@ -9,6 +9,18 @@ class Pruner(ABC):
     def transform(self) -> None:
        pass
 
+
+def _write_pruned_variants_file(config: RunConfig, legend: Legend, rows_to_keep: list) -> None:
+    base_path = config.args.output_legend if config.args.output_legend is not None else config.args.input_legend
+    if base_path is None:
+        return
+
+    with open(f'{base_path}-pruned-variants', 'w') as trimmed_vars_file:
+        trimmed_vars_file.write("\t".join(legend.get_header()) + '\n')
+        for row in range(legend.row_count()):
+            if row not in rows_to_keep:
+                trimmed_vars_file.write("\t".join([y for x, y in legend[row].items()]) + '\n')
+
 class StandardPruner(Pruner):
     def __init__(self, config: RunConfig, bins: list, legend: Legend, matrix: SparseMatrix):
         """
@@ -38,44 +50,42 @@ class StandardPruner(Pruner):
         :return: A TransformerResult object
         """
         bin_assignments = self.assign_bins()
-
-        print('Input allele frequency distribution:')
-        print_bin(self.__bins, bin_assignments)
+        input_bin_assignments = copy_bin_assignments(bin_assignments)
 
         protected_vars_per_bin = {}
+        unprotected_bins = None
+        unprotected_input_bin_assignments = None
+        unprotected_output_bin_assignments = None
         if self.__config.args.keep_protected:
             protected_vars_per_bin = adjust_for_protected_variants(self.__bins, bin_assignments, self.__legend)
             if self.__config.args.verbose:
-                print("Input allele frequency distribution (with protected variants pulled out):")
-                print_bin(self.__bins, bin_assignments)
+                unprotected_bins = copy.deepcopy(self.__bins)
+                unprotected_input_bin_assignments = copy_bin_assignments(bin_assignments)
 
         extra_rows = []
         prune_bins(extra_rows, bin_assignments, self.__legend, self.__matrix, self.__bins, self.__config.activation_threshold, self.__config.stop_threshold)
 
         if self.__config.args.keep_protected:
             if self.__config.args.verbose:
-                print("Output allele frequency distribution (without protected variants added back):")
-                print_bin(self.__bins, bin_assignments)
+                unprotected_output_bin_assignments = copy_bin_assignments(bin_assignments)
             add_protected_rows_back(self.__bins, bin_assignments, protected_vars_per_bin)
 
-        print('\nNew allele frequency distribution:')
-        print_bin(self.__bins, bin_assignments)
+        print('Allele frequency distribution:')
+        print_bin_comparison(self.__bins, input_bin_assignments, bin_assignments)
+        if self.__config.args.keep_protected and self.__config.args.verbose:
+            print('\nAllele frequency distribution excluding protected variants:')
+            print_bin_comparison(unprotected_bins, unprotected_input_bin_assignments, unprotected_output_bin_assignments)
 
         rows_to_keep = self.get_all_kept_rows(bin_assignments)
-
-        trimmed_vars_file = open(
-            f'{self.__config.args.output_legend if self.__config.args.output_legend is not None else self.__config.args.input_legend}-pruned-variants', 'w')
-        trimmed_vars_file.write("\t".join(self.__legend.get_header()) + '\n')
+        _write_pruned_variants_file(self.__config, self.__legend, rows_to_keep)
         for row in range(self.__matrix.num_rows()):
             if row not in rows_to_keep:
-                trimmed_vars_file.write("\t".join([y for x, y in self.__legend[row].items()]) + '\n')
                 self.__matrix.prune_row(row, self.__matrix.row_num(row))
                 if self.__matrix.row_num(row) != 0:
                     raise Exception(
                         "ERROR: Trimming pruned row to a row of zeros did not work. Failing so that we don't write a bad haps file.")
 
         rows_to_keep.sort()
-        trimmed_vars_file.close()
         if self.__config.remove_zeroed_rows:
             rows_to_remove = [x for x in range(self.__matrix.num_rows()) if x not in rows_to_keep]
             for rowId in rows_to_remove[::-1]:
@@ -196,23 +206,18 @@ class FunctionalSplitPruner(Pruner):
         :rtype: list
         """
         bin_assignments = self.assign_bins()
-
-        print('Input allele frequency distribution:')
-        print('Functional')
-        print_bin(self.__bins['fun'], bin_assignments['fun'])
-        print('\nSynonymous')
-        print_bin(self.__bins['syn'], bin_assignments['syn'])
+        input_bin_assignments = copy_bin_assignments(bin_assignments)
 
         protected_vars_per_bin = {}
+        unprotected_bins = None
+        unprotected_input_bin_assignments = None
+        unprotected_output_bin_assignments = None
         if self.__config.args.keep_protected:
             protected_vars_per_bin['fun'] = adjust_for_protected_variants(self.__bins['fun'], bin_assignments['fun'], self.__legend)
             protected_vars_per_bin['syn'] = adjust_for_protected_variants(self.__bins['syn'], bin_assignments['syn'], self.__legend)
             if self.__config.args.verbose:
-                print("Input allele frequency distribution (with protected variants pulled out):")
-                print('Functional')
-                print_bin(self.__bins['fun'], bin_assignments['fun'])
-                print('\nSynonymous')
-                print_bin(self.__bins['syn'], bin_assignments['syn'])
+                unprotected_bins = copy.deepcopy(self.__bins)
+                unprotected_input_bin_assignments = copy_bin_assignments(bin_assignments)
         extra_rows = []
 
         extra_rows = {'fun': [], 'syn': []}
@@ -221,35 +226,32 @@ class FunctionalSplitPruner(Pruner):
 
         if self.__config.args.keep_protected:
             if self.__config.args.verbose:
-                print("Output allele frequency distribution (without protected variants added back):")
-                print('Functional')
-                print_bin(self.__bins['fun'], bin_assignments['fun'])
-                print('\nSynonymous')
-                print_bin(self.__bins['syn'], bin_assignments['syn'])
+                unprotected_output_bin_assignments = copy_bin_assignments(bin_assignments)
             add_protected_rows_back(self.__bins['fun'], bin_assignments['fun'], protected_vars_per_bin['fun'])
             add_protected_rows_back(self.__bins['syn'], bin_assignments['syn'], protected_vars_per_bin['syn'])
-            
-        print('\nNew allele frequency distribution:')
+
+        print('Allele frequency distribution:')
         print('Functional')
-        print_bin(self.__bins['fun'], bin_assignments['fun'])
+        print_bin_comparison(self.__bins['fun'], input_bin_assignments['fun'], bin_assignments['fun'])
         print('\nSynonymous')
-        print_bin(self.__bins['syn'], bin_assignments['syn'])
+        print_bin_comparison(self.__bins['syn'], input_bin_assignments['syn'], bin_assignments['syn'])
+        if self.__config.args.keep_protected and self.__config.args.verbose:
+            print('\nAllele frequency distribution excluding protected variants:')
+            print('Functional')
+            print_bin_comparison(unprotected_bins['fun'], unprotected_input_bin_assignments['fun'], unprotected_output_bin_assignments['fun'])
+            print('\nSynonymous')
+            print_bin_comparison(unprotected_bins['syn'], unprotected_input_bin_assignments['syn'], unprotected_output_bin_assignments['syn'])
 
         rows_to_keep = self.get_all_kept_rows(bin_assignments)
-        
-        trimmed_vars_file = open(
-            f'{self.__config.args.output_legend if self.__config.args.output_legend is not None else self.__config.args.input_legend}-pruned-variants', 'w')
-        trimmed_vars_file.write("\t".join(self.__legend.get_header()) + '\n')
+        _write_pruned_variants_file(self.__config, self.__legend, rows_to_keep)
         for row in range(self.__matrix.num_rows()):
             if row not in rows_to_keep:
-                trimmed_vars_file.write("\t".join([y for x, y in self.__legend[row].items()]) + '\n')
                 self.__matrix.prune_row(row, self.__matrix.row_num(row))
                 if self.__matrix.row_num(row) != 0:
                     raise Exception(
                         "ERROR: Trimming pruned row to a row of zeros did not work. Failing so that we don't write a bad haps file.")
 
         rows_to_keep.sort()
-        trimmed_vars_file.close()
         if self.__config.remove_zeroed_rows:
             rows_to_remove = [x for x in range(self.__matrix.num_rows()) if x not in rows_to_keep]
             for rowId in rows_to_remove[::-1]:
@@ -340,6 +342,7 @@ class FunctionalSplitPruner(Pruner):
                 return i
         return len(bins)
 
+
 class ProbabilisticPruner(Pruner):
     def __init__(self, config: RunConfig, legend: Legend, matrix: SparseMatrix):
         self.__config: RunConfig = config
@@ -348,41 +351,40 @@ class ProbabilisticPruner(Pruner):
 
     def transform(self):
         """
-        Iterate over the input data and probabilistically remove columns (i.e. variants) from rows
-        according to the probabilities specified in the legend file.
+        Prune whole variants using the keep probability in the legend.
 
-        The probability of a variant being kept is given by the value in the 'prob' column of the legend.
-        A random number between 0 and 1 is generated for each variant, and if the number is greater than
-        the probability, the variant is removed from the data.
-
-        :return: None
+        A single random draw is made per row. If the draw is greater than the
+        legend's `prob` value, the whole variant is removed.
         """
+        probability_bins = build_probabilistic_bins(self.__matrix, self.__legend)
+        input_observed_afd = summarize_observed_afd(self.__matrix)
+
         rows_to_keep = []
-        
+
         for row_index in range(self.__matrix.num_rows()):
-            row = self.__matrix.get_row_raw(row_index)
-            for col_index in row:
-                flip = random.uniform(0, 1)
-                legend_val = self.__legend[row_index]['prob']
-                if legend_val == '.':
-                    continue
-                elif flip > float(legend_val):
-                    self.__matrix.remove(row_index, col_index)
-            
-            if self.__matrix.row_num(row_index) > 0:
+            legend_val = self.__legend[row_index]['prob']
+            if legend_val == '.':
                 rows_to_keep.append(row_index)
-        
-        trimmed_vars_file = open(
-            f'{self.__config.args.output_legend if self.__config.args.output_legend is not None else self.__config.args.input_legend}-pruned-variants', 'w')
-        trimmed_vars_file.write("\t".join(self.__legend.get_header()) + '\n')
-        for row in range(self.__matrix.num_rows()):
-            if row not in rows_to_keep:
-                trimmed_vars_file.write("\t".join([y for x, y in self.__legend[row].items()]) + '\n')
-        
-        trimmed_vars_file.close()
-        
+                continue
+
+            keep_probability = float(legend_val)
+            if random.uniform(0, 1) <= keep_probability:
+                rows_to_keep.append(row_index)
+                continue
+
+            self.__matrix.prune_row(row_index, self.__matrix.row_num(row_index))
+
+        print('Allele frequency distribution:')
+        if len(probability_bins) <= 10:
+            print_probabilistic_bin_summary(probability_bins, self.__matrix)
+        else:
+            print_observed_afd_comparison(input_observed_afd, summarize_observed_afd(self.__matrix))
+
+        _write_pruned_variants_file(self.__config, self.__legend, rows_to_keep)
+
         if self.__config.remove_zeroed_rows:
             rows_to_remove = [x for x in range(self.__matrix.num_rows()) if x not in rows_to_keep]
             for rowId in rows_to_remove[::-1]:
                 self.__legend.remove_row(rowId)
                 self.__matrix.remove_row(rowId)
+

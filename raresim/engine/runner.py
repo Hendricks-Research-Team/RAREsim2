@@ -30,7 +30,6 @@ class DefaultRunner:
         matrix: SparseMatrix = self.matrix_reader.loadSparseMatrix(self.args.sparse_matrix)
         legend: Legend = LegendReaderWriter.load_legend(self.args.input_legend)
         
-        # Only load bins if not in probabilistic mode
         bins = None
         if self.runConfig.run_type != "probabilistic":
             bins = self.get_bins()
@@ -101,6 +100,7 @@ class DefaultRunner:
             The chosen transformer
         """
         mode = self.runConfig.run_type
+        print()
         print(f"Running with run mode: {mode}")
         if mode == "standard":
             return StandardPruner(self.runConfig, bins, legend, matrix)
