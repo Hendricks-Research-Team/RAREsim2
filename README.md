@@ -6,6 +6,13 @@
 # RAREsim2
 Python interface for flexible simulation of rare-variant genetic data using real haplotypes
 
+## Versioning Note
+
+Versions of this repository correspond to two major software releases:
+- **RAREsim:** versions v1.x.x – v2.x.x
+- **RAREsim2:** versions v3.x.x and above
+  
+*The version used in the RAREsim2 manuscript is v3.0.5.*
 
 ## Installation
 
